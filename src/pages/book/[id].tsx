@@ -1,4 +1,7 @@
 import style from "./[id].module.css";
+import {GetServerSidePropsContext, InferGetServerSidePropsType, InferGetStaticPropsType} from "next";
+import fetchOneBook from "@/lib/fetch-one-book";
+import {useRouter} from "next/router";
 
 const mockData = {
   id: 1,
@@ -12,7 +15,34 @@ const mockData = {
     "https://shopping-phinf.pstatic.net/main_3888828/38888282618.20230913071643.jpg",
 };
 
-export default function Page() {
+export const getStaticPaths = ()=>{
+    return {
+        paths: [
+            {params:{id:'1'}},
+            {params:{id:'2'}},
+            {params:{id:'3'}},
+        ],
+        fallback: false,
+    }
+}
+
+export const getStaticProps = async (
+    context:GetServerSidePropsContext
+)=>{
+    const id = context.params!.id;
+    const book = await fetchOneBook(Number(id));
+    return{
+        props: {
+        book
+        }
+    }
+}
+export default function Page({book}:InferGetStaticPropsType<typeof getStaticProps>) {
+    const router = useRouter();
+    if(router.isFallback){
+        return "로딩중"
+    }
+    if(!book) return '문제 발생'
   const {
     id,
     title,
@@ -21,7 +51,7 @@ export default function Page() {
     author,
     publisher,
     coverImgUrl,
-  } = mockData;
+  } = book;
 
   return (
     <div className={style.container}>
